@@ -32,7 +32,9 @@ export default Vue.extend({
   methods: {
     getErrorTitle(errorObj: any) {
       if (errorObj.statusCode == 404) return "404 Not Found"
-      else return "An error was occured"
+      if (errorObj.statusCode == 403) return "403 Forbidden"
+      if (errorObj.statusCode == 500) return "500 Internal Server Error"
+      return "An error was occured"
     }
   }
 })

@@ -47,7 +47,7 @@ async function get<T>(apiName: string, config: AxiosRequestConfig<never> = {}): 
       result = await get<T>(apiName, config)
     } else {
       console.error(response.message)
-      throw response
+      throw e
     }
   }
 

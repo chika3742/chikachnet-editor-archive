@@ -19,7 +19,7 @@ export default Vue.extend({
   },
   mounted() {
     this.fetchArticle()
-    this.$store.dispatch("postData/fetchCategories")
+    if (this.$store.getters['vuexModuleDecorators/postData'].categories.length == 0) this.$store.dispatch("postData/fetchCategories")
   },
   methods: {
     async fetchArticle() {

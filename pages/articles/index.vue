@@ -63,7 +63,7 @@ export default Vue.extend({
   },
   methods: {
     async fetchPosts() {
-      await postDataStore.fetchPosts()
+      await postDataStore.fetchPosts(this)
       this.loading = false
     },
     openEditor(item: Article) {
