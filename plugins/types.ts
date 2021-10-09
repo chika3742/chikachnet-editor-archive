@@ -1,16 +1,10 @@
-import { EntityMetaSysProps } from 'contentful-management/types'
+import { EntityMetaSysProps } from "contentful-management/dist/typings/export-types"
 
 export interface ApiResponse<T> {
   success: boolean
   message: string
   idTokenExpired: boolean
   data: T
-}
-
-export enum Status {
-  published = "公開",
-  updated = "変更済み",
-  draft = "下書き"
 }
 
 export interface Article {
@@ -20,7 +14,8 @@ export interface Article {
   postDate: string
   category: string
   categoryId: string
-  status: Status
+  status: Status,
+  heroImage: AssetData,
   sys: EntityMetaSysProps
 }
 
@@ -29,6 +24,7 @@ export interface FixedPage {
 }
 
 export interface Category {
+  id: string
   name: string
   slug: string
   sys: EntityMetaSysProps
@@ -42,4 +38,10 @@ export interface AssetData {
 export enum ContentType {
   blogPost = "blogPost",
   fixedPage = "fixedPage"
+}
+
+export enum Status {
+  published = "公開",
+  updated = "変更済み",
+  draft = "下書き"
 }

@@ -1,5 +1,4 @@
 import { getIdToken } from '@firebase/auth'
-import { base64Encode } from '@firebase/util'
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, Method } from 'axios'
 import { auth } from '~/plugins/firebase'
 import { ApiResponse, Article, AssetData, Category, ContentType, FixedPage } from '~/plugins/types'
@@ -43,7 +42,8 @@ export async function getCategories(): Promise<Category[]> {
   return result!.data.data
 }
 
-export async function uploadAsset(file: File): Promise<AssetData> {
+export async function uploadAsset(file: File, onProgress: (msg: string) => void): Promise<AssetData> {
+  onProgress("読み込み中...")
   const data = await new Promise((resolve) => {
     const reader = new FileReader()
     reader.onload = () => {
@@ -51,7 +51,8 @@ export async function uploadAsset(file: File): Promise<AssetData> {
     }
     reader.readAsArrayBuffer(file)
   })
-  const result = await req<AssetData>("POST", "asset/create", {
+  onProgress("アップロード中...")
+  const result1 = await req<never>("PUT", "asset/create", {
     params: {
       file_name: file.name,
       content_type: file.type,
@@ -59,11 +60,20 @@ export async function uploadAsset(file: File): Promise<AssetData> {
     headers: {
       "Content-Type": file.type
     },
-    onUploadProgress(event) {
-      console.log(event.loaded)
-      
-    },
     data
+  })
+  const id = (result1?.data.data! as AssetData).id
+  onProgress("処理中...")
+  await req<never>("POST", "asset/process", {
+    params: {
+      id
+    }
+  })
+  onProgress("パブリッシュ中...")
+  const result = await req<AssetData>("POST", "asset/publish", {
+    params: {
+      id
+    }
   })
   return await result?.data.data!
   
