@@ -17,5 +17,9 @@
 }
 
 .CodeMirror, .CodeMirror-scroll {
-  height: 600px;
+  height: 500px;
+}
+
+.v-progress-circular .v-progress-circular__overlay {
+  transition: none;
 }

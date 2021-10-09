@@ -3,6 +3,7 @@
 </template>
 
 <script lang="ts">
+import { AxiosError } from 'axios'
 import Vue from 'vue'
 import { Article } from '~/plugins/types'
 import { getSingleArticle } from '~/utils/api'
@@ -23,8 +24,12 @@ export default Vue.extend({
   },
   methods: {
     async fetchArticle() {
-      const article = await getSingleArticle(this.$route.params.articleSlug)
-      this.article = article
+      try {
+        const article = await getSingleArticle(this.$route.params.articleSlug)
+        this.article = article
+      } catch (e) {
+        this.$nuxt.error({ message: (e as AxiosError<any>).response!.data.message })
+      }
     },
   }
 })

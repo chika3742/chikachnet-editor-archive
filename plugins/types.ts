@@ -24,10 +24,19 @@ export interface Article {
   sys: EntityMetaSysProps
 }
 
+export interface FixedPage {
+  title: string
+}
+
 export interface Category {
   name: string
   slug: string
   sys: EntityMetaSysProps
+}
+
+export interface AssetData {
+  url: string
+  id: string
 }
 
 export enum ContentType {

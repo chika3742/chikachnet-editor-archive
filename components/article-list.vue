@@ -10,6 +10,7 @@
       item-key="id"
       show-select
       loading-text="Loading..."
+      no-results-text="検索結果なし"
       :no-data-text="noDataText"
       @click:row="onRowClick" >
       <template #top>
