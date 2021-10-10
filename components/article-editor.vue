@@ -67,8 +67,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { Article, Category, Status } from '~/plugins/types'
-import { deleteEntry, getPreviewUrl, publishEntry, unpublishEntry, updateSingleArticle, uploadAsset } from '~/utils/api'
+import { Article, Category, ContentType, Status } from '~/plugins/types'
+import { deleteEntry, getPreviewToken, publishEntry, unpublishEntry, updateSingleArticle, uploadAsset } from '~/utils/api'
 
 let mde: any
 let timer: NodeJS.Timeout
@@ -87,6 +87,7 @@ export default Vue.extend({
       entry_: undefined as Article | undefined,
       interval: undefined as NodeJS.Timer | undefined,
       saveTime: 0,
+      previewToken: undefined as string | undefined
     }
   },
   computed: {
@@ -106,7 +107,7 @@ export default Vue.extend({
       })
     }
   },
-  mounted() {
+  async mounted() {
     const SimpleMDE = require('simplemde')
     mde = new SimpleMDE({
       blockStyles: {
@@ -151,6 +152,7 @@ export default Vue.extend({
         "fullscreen"
       ]
     })
+    this.previewToken = await getPreviewToken()
   },
   methods: {
     autosave() {
@@ -204,14 +206,15 @@ export default Vue.extend({
     async openPreview() {
       if (!this.entry_?.categoryId || !this.entry_.slug) {
         this.showSnackbar("カテゴリーとスラッグを設定してください")
-      } else if (this.$store.getters['vuexModuleDecorators/postData'].categories.length == 0) {
-        this.showSnackbar('カテゴリーの読み込みが未完了です')
+      } else if (this.$store.getters['vuexModuleDecorators/postData'].categories.length == 0 || !this.previewToken) {
+        this.showSnackbar('読み込みが未完了です')
       } else {
-        this.currentAction = "preview"
         const categories = this.$store.getters['vuexModuleDecorators/postData'].categories as Category[]
         const categorySlug = categories.find(e => e.id == this.entry_?.categoryId)!.slug
-        window.open((await getPreviewUrl(this.entry_?.slug!, categorySlug, this.contentType)), "preview")
-        this.currentAction = undefined
+        let url: string
+        if (this.contentType == ContentType.blogPost) {
+          url = `https://www.chikach.net/category/${categorySlug}/${this.entry_?.slug}?preview=true&token=${this.previewToken}`
+        }
       }
     },
     showPublishDialog() {

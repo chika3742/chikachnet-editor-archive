@@ -113,14 +113,8 @@ export async function uploadAsset(file: File, onProgress: (msg: string) => void)
   return await result?.data.data!
 }
 
-export async function getPreviewUrl(slug: string, categorySlug: string, contentType: ContentType): Promise<string> {
-  const result = await req<string>("GET", "preview_url", {
-    params: {
-      slug,
-      category_slug: categorySlug,
-      content_type: contentType
-    }
-  })
+export async function getPreviewToken(): Promise<string> {
+  const result = await req<string>("GET", "preview_token")
   return result?.data.data!
 }
 
