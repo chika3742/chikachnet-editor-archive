@@ -25,7 +25,7 @@ export default Vue.extend({
   methods: {
     async fetchArticle() {
       try {
-        const article = await getSingleArticle(this.$route.params.articleSlug)
+        const article = await getSingleArticle(this.$route.params.articleId)
         this.article = article
       } catch (e) {
         this.$nuxt.error({ message: (e as AxiosError<any>).response!.data.message })

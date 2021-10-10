@@ -9,14 +9,16 @@
     :loading="loading"
     @rowClick="openEditor"
     @create="create"
+    @change="changeSelected"
     @deleteSelected="deleteSelected"/>
   <p v-else>エラーが発生しました。({{ errorMessage }})</p>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import { Article } from '~/plugins/types'
-import { postDataStore } from '~/store'
+import { Article, ContentType } from '~/plugins/types'
+import { configStore, postDataStore } from '~/store'
+import { createEntry } from '~/utils/api'
 
 export default Vue.extend({
   data() {
@@ -69,12 +71,17 @@ export default Vue.extend({
     openEditor(item: Article) {
       this.$router.push(`/articles/editor/${item.sys.id}`)
     },
-    create() {
-
+    async create() {
+      const result = await createEntry(ContentType.blogPost)
+      this.$router.push(`/articles/editor/${result.id}`)
     },
     deleteSelected() {
 
+    },
+    changeSelected(value: Article[]) {
+      configStore.setSelectedPosts(value)
     }
+
   }
 })
 </script>

@@ -7,7 +7,7 @@
       :loading="loading"
       :items-per-page="15"
       :search="search"
-      item-key="id"
+      item-key="sys.id"
       show-select
       loading-text="Loading..."
       no-results-text="検索結果なし"
@@ -17,7 +17,7 @@
         <v-row v-if="selected.length == 0" class="ma-0">
           <v-dialog v-model="dialog2" max-width="400px">
             <template #activator="{on, attrs}">
-              <v-btn v-if="!$route.path.includes('comments')" class="ml-6 mt-6" v-bind="attrs" v-on="on">変更した記事を一括公開</v-btn>
+              <v-btn v-if="!$route.path.includes('comments')" class="ml-6 mt-6" :disabled="loading" v-bind="attrs" v-on="on">変更した記事を一括公開</v-btn>
             </template>
             <v-card>
               <v-card-title>確認</v-card-title>

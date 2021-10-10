@@ -74,6 +74,11 @@ export default Vue.extend({
           to: '/categories'
         },
         {
+          icon: 'photo',
+          title: 'メディア',
+          to: '/assets'
+        },
+        {
           icon: 'comment',
           title: 'コメント',
           to: '/comments'

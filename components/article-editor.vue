@@ -1,14 +1,14 @@
 <template>
   <v-app dark>
     <v-app-bar app>
-      <v-app-bar-nav-icon @click="$router.go(-1)"><v-icon>arrow_back</v-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon @click="back"><v-icon>arrow_back</v-icon></v-app-bar-nav-icon>
       <v-app-bar-title>編集 - {{ entry_ ? entry_.title : '' }}</v-app-bar-title>
       <v-spacer/>
       <v-progress-circular v-if="interval" :value="saveTime">{{ Math.ceil(saveTime * (3 / 100)) }}</v-progress-circular>
-      <v-app-bar-nav-icon :disabled="!entry_" :loading="currentAction == 'deletion'"><v-icon>mdi-delete</v-icon></v-app-bar-nav-icon>
-      <v-app-bar-nav-icon :disabled="!entry_" ><v-icon>mdi-eye</v-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon :disabled="!entry_" :loading="currentAction == 'deletion'" @click="dialog = true"><v-icon>mdi-delete</v-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon :disabled="!entry_" :loading="currentAction == 'preview'" @click="openPreview"><v-icon>mdi-eye</v-icon></v-app-bar-nav-icon>
       <v-app-bar-nav-icon :disabled="!entry_" :loading="currentAction == 'save'" @click="save"><v-icon>mdi-floppy</v-icon></v-app-bar-nav-icon>
-      <v-btn v-if="pubText != ''" :loading="currentAction == 'publish'" color="#008700">{{ pubText }}</v-btn>
+      <v-btn :loading="currentAction == 'publish'" color="#008700" @click="showPublishDialog">{{ pubText }}</v-btn>
       <!-- <v-btn icon :loading="deleting" :disabled="!entry" v-bind="attrs" v-on="on"><v-icon>mdi-delete</v-icon></v-btn> -->
     </v-app-bar>
     <v-main>
@@ -37,6 +37,28 @@
 
           <v-text-field label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
         </v-col>
+        <v-dialog v-model="dialog" max-width="400px">
+          <v-card>
+            <v-card-title>確認</v-card-title>
+            <v-card-text>このエントリを削除しますか？</v-card-text>
+            <v-card-actions>
+              <v-spacer/>
+              <v-btn text @click="dialog = false">キャンセル</v-btn>
+              <v-btn text @click="deleteEntry">OK</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+        <v-dialog v-model="dialog2" max-width="400px">
+          <v-card>
+            <v-card-title>確認</v-card-title>
+            <v-card-text>{{ pubText == "下書きに戻す" ? "このエントリを非公開にしますか？" : "このエントリを公開しますか？" }}</v-card-text>
+            <v-card-actions>
+              <v-spacer/>
+              <v-btn text @click="dialog2 = false">キャンセル</v-btn>
+              <v-btn text @click="publish(pubText != '下書きに戻す')">OK</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
         <v-snackbar v-model="snackbar">{{ snackbarText }}</v-snackbar>
       </v-container>
     </v-main>
@@ -45,8 +67,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { Article, Status } from '~/plugins/types'
-import { updateSingleArticle, uploadAsset } from '~/utils/api'
+import { Article, Category, Status } from '~/plugins/types'
+import { deleteEntry, getPreviewUrl, publishEntry, unpublishEntry, updateSingleArticle, uploadAsset } from '~/utils/api'
 
 let mde: any
 let timer: NodeJS.Timeout
@@ -60,6 +82,8 @@ export default Vue.extend({
       uploadProgress: "",
       snackbar: false,
       snackbarText: "",
+      dialog: false,
+      dialog2: false,
       entry_: undefined as Article | undefined,
       interval: undefined as NodeJS.Timer | undefined,
       saveTime: 0,
@@ -69,15 +93,14 @@ export default Vue.extend({
     pubText() {
       if (this.entry_?.status == Status.updated) return "変更を公開"
       if (this.entry_?.status == Status.draft) return "公開"
-      return ""
+      if (this.entry_?.status == Status.published) return "下書きに戻す"
+      return "Loading..."
     }
   },
   watch: {
     entry(value) {
       (this as any).$nextTick(() => {
         this.entry_ = this.entry
-        console.log(this.entry_)
-        
         mde.value(value.body)
         mde.codemirror.on('change', (this as any).autosave)
       })
@@ -142,6 +165,10 @@ export default Vue.extend({
         this.saveTime -= (50 / 2900) * 100
       }, 50)
     },
+    async back() {
+      if (this.interval) await this.save()
+      this.$router.go(-1)
+    },
     async save() {
       clearInterval(this.interval!)
       this.interval = undefined
@@ -173,6 +200,54 @@ export default Vue.extend({
         this.uploading = false
       })
       el.click()
+    },
+    async openPreview() {
+      if (!this.entry_?.categoryId || !this.entry_.slug) {
+        this.showSnackbar("カテゴリーとスラッグを設定してください")
+      } else if (this.$store.getters['vuexModuleDecorators/postData'].categories.length == 0) {
+        this.showSnackbar('カテゴリーの読み込みが未完了です')
+      } else {
+        this.currentAction = "preview"
+        const categories = this.$store.getters['vuexModuleDecorators/postData'].categories as Category[]
+        const categorySlug = categories.find(e => e.id == this.entry_?.categoryId)!.slug
+        window.open((await getPreviewUrl(this.entry_?.slug!, categorySlug, this.contentType)), "preview")
+        this.currentAction = undefined
+      }
+    },
+    showPublishDialog() {
+      if (!this.entry_?.title || !this.entry_.slug || !this.entry_.categoryId) {
+        this.showSnackbar("必須フィールド(タイトル、スラッグ、カテゴリー)を入力してください")
+        return
+      }
+      this.dialog2 = true
+    },
+    async publish(publish: boolean) {
+      if (this.interval) await this.save()
+      this.currentAction = "publish"
+      this.dialog2 = false
+      try {
+        let newEntry: Article
+        if (publish) newEntry = await publishEntry(this.entry_?.sys.id!)
+        else newEntry = await unpublishEntry(this.entry_?.sys.id!)
+        
+        this.entry_ = newEntry
+        this.showSnackbar(publish ? "公開しました" : "非公開にしました")
+      } catch (e) {
+        this.showSnackbar(e.response.data.message)
+      }
+      this.currentAction = undefined
+    },
+    async deleteEntry() {
+      this.dialog = false
+      this.currentAction = "deletion"
+      try {
+        if (this.entry_?.status != Status.draft) await unpublishEntry(this.entry_!.sys.id)
+        await deleteEntry(this.entry_!.sys.id)
+        this.$router.go(-1)
+      } catch (e) {
+        this.showSnackbar(e.message)
+      }
+      this.currentAction = undefined
     },
     showSnackbar(text: string) {
       this.snackbarText = text

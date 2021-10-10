@@ -26,6 +26,41 @@ export async function getSingleArticle(id: string): Promise<Article> {
   return result!.data.data
 }
 
+export async function createEntry(contentType: ContentType): Promise<{id: string}> {
+  const result = await req<any>("PUT", "entry/single", {
+    params: {
+      content_type: contentType
+    }
+  })
+  return result?.data.data!
+}
+
+export async function publishEntry(id: string): Promise<Article> {
+  const result = await req<Article>("POST", "entry/publish", {
+    params: {
+      id
+    }
+  })
+  return result?.data.data!
+}
+
+export async function unpublishEntry(id: string): Promise<Article> {
+  const result = await req<Article>("POST", "entry/unpublish", {
+    params: {
+      id
+    }
+  })
+  return result?.data.data!
+}
+
+export async function deleteEntry(id: string) {
+  await req<never>("DELETE", "entry/single", {
+    params: {
+      id
+    }
+  })
+}
+
 export async function updateSingleArticle(id: string, data: Article): Promise<ApiResponse<never>> {
   const result = await req<Article>("POST", "entry/single", {
     data,
@@ -44,10 +79,10 @@ export async function getCategories(): Promise<Category[]> {
 
 export async function uploadAsset(file: File, onProgress: (msg: string) => void): Promise<AssetData> {
   onProgress("読み込み中...")
-  const data = await new Promise((resolve) => {
+  const data = await new Promise<ArrayBuffer>((resolve) => {
     const reader = new FileReader()
     reader.onload = () => {
-      resolve(reader.result)
+      resolve(reader.result as ArrayBuffer)
     }
     reader.readAsArrayBuffer(file)
   })
@@ -60,7 +95,7 @@ export async function uploadAsset(file: File, onProgress: (msg: string) => void)
     headers: {
       "Content-Type": file.type
     },
-    data
+    data: new Uint8Array(data)
   })
   const id = (result1?.data.data! as AssetData).id
   onProgress("処理中...")
@@ -76,7 +111,17 @@ export async function uploadAsset(file: File, onProgress: (msg: string) => void)
     }
   })
   return await result?.data.data!
-  
+}
+
+export async function getPreviewUrl(slug: string, categorySlug: string, contentType: ContentType): Promise<string> {
+  const result = await req<string>("GET", "preview_url", {
+    params: {
+      slug,
+      category_slug: categorySlug,
+      content_type: contentType
+    }
+  })
+  return result?.data.data!
 }
 
 async function req<T>(method: string, apiName: string, config: AxiosRequestConfig<any> = {}): Promise<AxiosResponse<ApiResponse<T>> | undefined> {
