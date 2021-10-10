@@ -203,7 +203,7 @@ export default Vue.extend({
       })
       el.click()
     },
-    async openPreview() {
+    openPreview() {
       if (!this.entry_?.categoryId || !this.entry_.slug) {
         this.showSnackbar("カテゴリーとスラッグを設定してください")
       } else if (this.$store.getters['vuexModuleDecorators/postData'].categories.length == 0 || !this.previewToken) {
@@ -211,10 +211,11 @@ export default Vue.extend({
       } else {
         const categories = this.$store.getters['vuexModuleDecorators/postData'].categories as Category[]
         const categorySlug = categories.find(e => e.id == this.entry_?.categoryId)!.slug
-        let url: string
+        let url = ""
         if (this.contentType == ContentType.blogPost) {
           url = `https://www.chikach.net/category/${categorySlug}/${this.entry_?.slug}?preview=true&token=${this.previewToken}`
         }
+        window.open(url, "preview")
       }
     },
     showPublishDialog() {
