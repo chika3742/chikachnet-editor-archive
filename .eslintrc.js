@@ -37,5 +37,6 @@ module.exports = {
     'require-await': 1,
     'node/handle-callback-err': 1,
     '@typescript-eslint/no-unused-vars': 1,
+    'no-use-before-define': 0
   }
 }

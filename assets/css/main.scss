@@ -1,8 +1,23 @@
 @import url("https://fonts.googleapis.com/css?family=Material+Icons");
 @import url("https://cdn.rawgit.com/xcatliu/simplemde-theme-dark/master/dist/simplemde-theme-dark.min.css");
 
-.v-data-table tbody tr {
-  cursor: pointer;
+.v-data-table {
+  tbody {
+    tr {
+      cursor: pointer;
+    }
+    tr:not(.v-data-table__mobile-table-row) {
+      height: 80px;
+    }
+    .v-data-table__mobile-row:nth-child(1) .v-data-table__mobile-row__header,
+    .v-data-table__mobile-row:nth-child(2) .v-data-table__mobile-row__header {
+      display: none;
+    }
+    .v-data-table__mobile-row:nth-child(2) .v-data-table__mobile-row__cell {
+      text-align: left;
+      margin: 8px;
+    }
+  }
 }
 
 .center {
@@ -16,7 +31,7 @@
   justify-content: center;
 }
 
-.CodeMirror, .CodeMirror-scroll {
+.CodeMirror {
   height: 500px;
 }
 

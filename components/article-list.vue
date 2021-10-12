@@ -22,7 +22,6 @@
             <v-card>
               <v-card-title>確認</v-card-title>
               <v-card-text>変更した記事をすべて公開します。</v-card-text>
-              <v-divider/>
               <v-card-actions>
                 <v-spacer/>
                 <v-btn text @click="dialog2 = false">キャンセル</v-btn>
@@ -77,6 +76,9 @@
       <template #[`item.status`]="{item}">
         <span :class="statusClass(item.status)">{{item.status}}</span>
       </template>
+      <template #[`item.title`]="{item}">
+        <span style="font-size: 1.1em; font-weight: bold">{{item.title}}</span>
+      </template>
     </v-data-table>
     <v-btn fixed fab style="position: fixed; bottom: 0; right: 0" class="ma-8" :loading="creating" @click="create"><v-icon>post_add</v-icon></v-btn>
     <v-snackbar v-model="snackbar">
@@ -85,30 +87,13 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    headers: {
-      type: Array,
-      required: true
-    },
-    posts: {
-      type: Array,
-      required: true
-    },
-    noDataText: {
-      type: String,
-      default: ""
-    },
-    loading: {
-      type: Boolean,
-      default: true
-    },
-    selectedItems: {
-      type: Array,
-      default: () => ([])
-    }
-  },
+<script lang="ts">
+import Vue from 'vue'
+import { Article, Status } from '~/plugins/types'
+import { postDataStore } from '~/store'
+import { publishEntry } from '~/utils/api'
+export default Vue.extend({
+  props: ['headers', 'posts', 'noDataText', 'loading', 'selectedItems'],
   data() {
     return {
       search: "",
@@ -123,15 +108,17 @@ export default {
   computed: {
     selected: {
       get() {
+        // @ts-ignore
         return this.$props.selectedItems
       },
       set(value) {
+        // @ts-ignore
         this.$emit('change', value)
       }
     }
   },
   methods: {
-    onRowClick(item) {
+    onRowClick(item: Article) {
       this.$emit("rowClick", item)
     },
     create() {
@@ -142,24 +129,20 @@ export default {
       this.dialog = false
       this.$emit("deleteSelected")
     },
-    statusClass(status) {
-      if (status == "下書き") return "orange--text"
-      if (status == "変更済み") return "blue--text"
-      if (status == "公開") return "green--text"
+    statusClass(status: Status) {
+      if (status == Status.draft) return "orange--text"
+      if (status == Status.updated) return "blue--text"
+      if (status == Status.published) return "green--text"
     },
     publishAll() {
       this.dialog2 = false
+      // @ts-ignore
       this.$parent.loading = true
       const promises = [
-        ...this.$store.getters.postEntries?.filter((e) => e.status == "変更あり")?.map((e) => this.$callApi(this, "GET", "publish", {
-          id: e.id
-        })),
-        ...this.$store.getters.fixedPageEntries?.filter((e) => e.status == "変更あり")?.map((e) => this.$callApi(this, "GET", "publish", {
-          id: e.id
-        }))
+        ...this.$store.getters['vuexModuleDecorators/postData'].posts.filter((el: Article) => el.status == Status.updated).map((el: Article) => publishEntry(el.sys.id))
       ]
       Promise.all(promises).then(() => {
-        return Promise.all([this.$store.dispatch("getPostEntries"), this.$store.dispatch("getFixedPageEntries")])
+        return Promise.all([postDataStore.fetchPosts(this)])
       }).then(() => {
         this.snackbar = true
         this.snackbarText = "公開しました"
@@ -171,11 +154,12 @@ export default {
           this.snackbarText = "エラーが発生しました"
         }
       }).finally(() => {
+        // @ts-ignore
         this.$parent.loading = false
       })
     }
   }
-}
+})
 </script>
 
 <style lang="scss">

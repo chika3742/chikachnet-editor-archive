@@ -34,7 +34,9 @@
     </v-app-bar>
     <v-main>
       <v-container>
-        <Nuxt v-if="!loading" />
+        <v-slide-y-reverse-transition v-if="!loading">
+          <Nuxt />
+        </v-slide-y-reverse-transition>
         <v-row v-else align="center" class="ma-0">
           <v-progress-circular indeterminate />
           <span class="ml-4">Checking auth state...</span>
