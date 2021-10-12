@@ -38,6 +38,7 @@
             <v-text-field label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
           </v-col>
         </v-slide-y-transition>
+
         <v-dialog v-model="dialog" max-width="400px">
           <v-card>
             <v-card-title>確認</v-card-title>
@@ -49,6 +50,7 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+
         <v-dialog v-model="dialog2" max-width="400px">
           <v-card>
             <v-card-title>確認</v-card-title>
@@ -60,6 +62,29 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+
+        <v-dialog v-model="uploadingImage" persistent width="300px">
+          <v-card>
+            <v-card-title>画像アップロード中</v-card-title>
+            <v-card-text>
+              {{ uploadProgress }}
+              <v-progress-linear indeterminate />
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+
+        <v-dialog width="400">
+          <v-card>
+            <v-card-title>画像挿入</v-card-title>
+            <v-card-text>挿入方法の選択</v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn text>ライブラリから挿入</v-btn>
+              <v-btn text>新規アップロード</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <v-snackbar v-model="snackbar">{{ snackbarText }}</v-snackbar>
       </v-container>
     </v-main>
@@ -80,6 +105,7 @@ export default Vue.extend({
     return {
       currentAction: undefined as string | undefined,
       uploading: false,
+      uploadingImage: false,
       uploadProgress: "",
       snackbar: false,
       snackbarText: "",
@@ -119,8 +145,8 @@ export default Vue.extend({
         "|",
         "heading-2",
         "heading-3",
-        "horizontal-rule",
         "|",
+        "horizontal-rule",
         "code",
         "quote",
         "unordered-list",
@@ -131,19 +157,27 @@ export default Vue.extend({
           title: "Insert image",
           className: "fa fa-image",
           action: (editor: any) => {
-            // const el = document.createElement("input")
-            // el.setAttribute("type", "file")
-            // el.setAttribute("accept", "image/*")
-            // el.addEventListener('change', () => {
-            //   const reader = new FileReader()
-            //   reader.addEventListener('load', () => {
-            //     // this.uploadAsset(el.files[0], reader)
-            //   }, false)
-            //   // reader.readAsDataURL(el.files[0])
-            // })
-            // el.click()
-            const cursor = editor.codemirror.getCursor()
-            editor.codemirror.getDoc().replaceRange("\n\n![image]()", cursor)
+            const el = document.createElement("input")
+            el.setAttribute("type", "file")
+            el.setAttribute("accept", "image/*")
+            el.setAttribute("multiple", "true")
+            el.addEventListener('change', async () => {
+              this.uploadingImage = true
+              try {
+                for (let i = 0; i < el.files!.length; i++) {
+                  const result = await uploadAsset(el.files![i], (msg) => {
+                    this.uploadProgress = `${msg} (${i + 1} / ${el.files?.length})`
+                  })
+
+                  const cursor = editor.codemirror.getCursor()
+                  editor.codemirror.getDoc().replaceRange(`\n\n![image](${result.url})`, cursor)
+                }
+              } catch (e) {
+                this.showSnackbar(`エラーが発生しました。${e.message}`)
+              }
+              this.uploadingImage = false
+            })
+            el.click()
           }
         },
         "|",
@@ -161,7 +195,7 @@ export default Vue.extend({
       this.entry_!.body = mde.value()
       timer = setTimeout(() => {
         this.save()
-      }, 3000)
+      }, 5000)
     },
     async back() {
       if (timer) await this.save()
