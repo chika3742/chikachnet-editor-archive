@@ -6,13 +6,16 @@
       :items="posts"
       :loading="loading"
       :items-per-page="15"
+      :server-items-length="serverTotal"
       :search="search"
+      :options.sync="options"
       item-key="sys.id"
       show-select
       loading-text="Loading..."
       no-results-text="検索結果なし"
       :no-data-text="noDataText"
-      @click:row="onRowClick" >
+      @click:row="onRowClick"
+      @update:options="updatePage">
       <template #top>
         <v-row v-if="selected.length == 0" class="ma-0">
           <v-dialog v-model="dialog2" max-width="400px">
@@ -93,10 +96,13 @@ import { Article, Status } from '~/plugins/types'
 import { postDataStore } from '~/store'
 import { publishEntry } from '~/utils/api'
 export default Vue.extend({
-  props: ['headers', 'posts', 'noDataText', 'loading', 'selectedItems'],
+  props: ['headers', 'posts', 'noDataText', 'loading', 'selectedItems', 'serverTotal'],
   data() {
     return {
       search: "",
+      options: {
+        itemsPerPage: 20
+      } as any,
       creating: false,
       deleting: false,
       dialog: false,
@@ -129,6 +135,9 @@ export default Vue.extend({
       this.dialog = false
       this.$emit("deleteSelected")
     },
+    updatePage() {
+      this.$emit('updatePage', this.options)
+    },
     statusClass(status: Status) {
       if (status == Status.draft) return "orange--text"
       if (status == Status.updated) return "blue--text"
@@ -142,7 +151,7 @@ export default Vue.extend({
         ...this.$store.getters['vuexModuleDecorators/postData'].posts.filter((el: Article) => el.status == Status.updated).map((el: Article) => publishEntry(el.sys.id))
       ]
       Promise.all(promises).then(() => {
-        return Promise.all([postDataStore.fetchPosts(this)])
+        return Promise.all([postDataStore.fetchPosts([this, this.options.page])])
       }).then(() => {
         this.snackbar = true
         this.snackbarText = "公開しました"

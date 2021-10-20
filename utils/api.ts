@@ -1,16 +1,17 @@
 import { getIdToken } from '@firebase/auth'
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, Method } from 'axios'
 import { auth } from '~/plugins/firebase'
-import { ApiResponse, Article, AssetData, Category, ContentType, FixedPage } from '~/plugins/types'
+import { ApiResponse, Article, ArticleResponse, AssetData, Category, CommentResponse, ContentType, FixedPage } from '~/plugins/types'
 
 const axiosDefaultHeader = async () => ({
   authorization: "Bearer " + await getIdToken(auth.currentUser!)
 })
 
-export async function getEntries(contentType: ContentType): Promise<Article[]> {
-  const result = await req<Article[]>("GET", "entry/list", {
+export async function getEntries(contentType: ContentType, skip: number): Promise<ArticleResponse> {
+  const result = await req<ArticleResponse>("GET", "entry/list", {
     params: {
-      content_type: contentType
+      content_type: contentType,
+      skip
     }
   })
   return result!.data.data
@@ -87,7 +88,7 @@ export async function uploadAsset(file: File, onProgress: (msg: string) => void)
     reader.readAsArrayBuffer(file)
   })
   onProgress("アップロード中...")
-  const result1 = await req<never>("PUT", "asset/create", {
+  const result1 = await req<never>("PUT", "asset/single", {
     params: {
       file_name: file.name,
       content_type: file.type,
@@ -113,9 +114,45 @@ export async function uploadAsset(file: File, onProgress: (msg: string) => void)
   return await result?.data.data!
 }
 
+export async function deleteAsset(id: string) {
+  await req<null>("DELETE", "/asset/single", {
+    params: {
+      id
+    }
+  })
+}
+
 export async function getPreviewToken(): Promise<string> {
   const result = await req<string>("GET", "preview_token")
   return result?.data.data!
+}
+
+export async function getComments(offset: number): Promise<CommentResponse> {
+  const result = await req<CommentResponse>("GET", "comment/list", {
+    params: {
+      offset
+    }
+  })
+  return result?.data.data!
+}
+
+export async function editComment(id: string, content: string): Promise<void> {
+  await req<void>("POST", "comment/content-edit", {
+    params: {
+      id
+    },
+    data: {
+      content
+    }
+  })
+}
+
+export async function deleteComment(id: string): Promise<void> {
+  await req<void>("DELETE", "comment/single", {
+    params: {
+      id
+    }
+  })
 }
 
 async function req<T>(method: string, apiName: string, config: AxiosRequestConfig<any> = {}): Promise<AxiosResponse<ApiResponse<T>> | undefined> {
@@ -131,14 +168,16 @@ async function req<T>(method: string, apiName: string, config: AxiosRequestConfi
       }
     })
   } catch (e: any) {
-    const error = e as AxiosError<ApiResponse<any>>
-    const response = error.response?.data as ApiResponse<any>
-    if (response.idTokenExpired) {
-      result = await req<T>(method, apiName, config)
-    } else {
-      console.error(response.message)
-      throw e
-    }
+    if (e.response) {
+      const error = e as AxiosError<ApiResponse<any>>
+      const response = error.response?.data as ApiResponse<any>
+      if (response.idTokenExpired) {
+        result = await req<T>(method, apiName, config)
+      } else {
+        console.error(response.message)
+        throw e
+      }
+    } else throw e
   }
 
   return result

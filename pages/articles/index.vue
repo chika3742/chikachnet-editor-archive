@@ -1,24 +1,36 @@
 <template>
-  <ArticleList
-    v-if="!error"
-    ref="list"
-    :headers="headers"
-    :posts="postDataStore.posts"
-    :selectedItems="configStore.selectedPosts"
-    noDataText="記事がありません"
-    :loading="loading"
-    @rowClick="openEditor"
-    @create="create"
-    @change="changeSelected"
-    @deleteSelected="deleteSelected"/>
-  <p v-else>エラーが発生しました。({{ errorMessage }})</p>
+  <div>
+    <ArticleList
+      ref="list"
+      :headers="headers"
+      :posts="posts"
+      :selectedItems="configStore.selectedPosts"
+      :serverTotal="total"
+      noDataText="記事がありません"
+      :loading="loading"
+      @rowClick="openEditor"
+      @create="create"
+      @change="changeSelected"
+      @deleteSelected="deleteSelected"
+      @updatePage="updatePage"/>
+    <v-dialog v-model="error" max-width="400" persistent>
+      <v-card>
+        <v-card-title>エラー</v-card-title>
+        <v-card-text>記事一覧の読み込み時にエラーが発生しました。{{ errorMessage }}</v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="fetchPosts(); error = false" >再試行</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import { Article, ContentType } from '~/plugins/types'
-import { configStore, postDataStore } from '~/store'
-import { createEntry } from '~/utils/api'
+import { configStore } from '~/store'
+import { createEntry, getEntries } from '~/utils/api'
 
 export default Vue.extend({
   data() {
@@ -41,8 +53,11 @@ export default Vue.extend({
           value: 'status',
         },
       ],
-      error: undefined,
       loading: true,
+      posts: [] as Article[],
+      total: 0,
+      error: false,
+      errorMessage: "",
     }
   },
   head() {
@@ -61,13 +76,18 @@ export default Vue.extend({
     },
   },
   mounted() {
-    this.fetchPosts()
+    // this.fetchPosts()
   },
   methods: {
-    async fetchPosts() {
-      await postDataStore.fetchPosts(this)
-      this.loading = false
-    },
+    // async fetchPosts() {
+    //   const error = await postDataStore.fetchPosts(this)
+    //   if (error) {
+    //     this.error = true
+    //     this.errorMessage = error
+    //   }
+      
+    //   this.loading = false
+    // },
     openEditor(item: Article) {
       this.$router.push(`/articles/editor/${item.sys.id}`)
     },
@@ -76,7 +96,16 @@ export default Vue.extend({
       this.$router.push(`/articles/editor/${result.id}`)
     },
     deleteSelected() {
-
+      console.log(configStore.selectedPosts)
+      
+    },
+    async updatePage(pageInfo: any) {
+      this.loading = true
+      this.posts = []
+      const result = await getEntries(ContentType.blogPost, (pageInfo.page - 1) * 20)
+      this.total = result.total
+      this.posts = result.list
+      this.loading = false
     },
     changeSelected(value: Article[]) {
       configStore.setSelectedPosts(value)

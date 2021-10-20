@@ -36,7 +36,7 @@ export default {
     '~plugins/utils.ts',
     '~plugins/firebase.ts',
     '~plugins/checkSigninState.client.ts',
-    // '~plugins/vue-simplemde.ts',
+    '~plugins/vue-shortkey.client.ts',
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

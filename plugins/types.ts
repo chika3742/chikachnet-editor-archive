@@ -7,6 +7,12 @@ export interface ApiResponse<T> {
   data: T
 }
 
+export interface ArticleResponse {
+  total: number
+  skip: number
+  list: Article[]
+}
+
 export interface Article {
   title: string
   slug: string
@@ -15,7 +21,7 @@ export interface Article {
   category: string
   categoryId: string
   status: Status,
-  heroImage: AssetData,
+  heroImage: AssetData | undefined,
   sys: EntityMetaSysProps
 }
 
@@ -33,6 +39,26 @@ export interface Category {
 export interface AssetData {
   url: string
   id: string
+}
+
+export interface CommentResponse {
+  offset: number
+  list: Comment[]
+}
+
+export interface Comment {
+  id: string
+  ip: string
+  uid: string
+  nickname: string
+  postDate: Date | undefined
+  content: string
+  entry: {
+    id: string,
+    title: string,
+    url: string
+  },
+  replies: Comment[] | undefined
 }
 
 export enum ContentType {

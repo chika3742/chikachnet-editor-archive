@@ -18,6 +18,8 @@
     "pug": "^3.0.2",
     "pug-plain-loader": "^1.1.0",
     "simplemde": "^1.11.2",
+    "vue-infinite-loading": "^2.4.5",
+    "vue-shortkey": "^3.1.7",
     "vuetify": "^2.5.5",
     "vuex-module-decorators": "^1.0.1"
   },

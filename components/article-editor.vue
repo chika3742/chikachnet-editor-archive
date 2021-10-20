@@ -11,7 +11,7 @@
       <!-- <v-btn icon :loading="deleting" :disabled="!entry" v-bind="attrs" v-on="on"><v-icon>mdi-delete</v-icon></v-btn> -->
     </v-app-bar>
     <v-main>
-      <v-container>
+      <v-container v-shortkey="['meta', 's']" @shortkey="save">
         <div v-if="!entry" class="center"><v-progress-circular indeterminate size="70" width="5" /></div>
         <v-slide-y-transition>
           <v-col v-show="entry">
@@ -26,7 +26,7 @@
             <h3>カバー画像</h3>
             <v-img :src="entry_ && entry_.heroImage ? entry_.heroImage.url : undefined" class="my-4" style="width: 500px" />
             <v-row class="ma-0 mb-8" align="center">
-              <v-btn :disabled="!entry_ || !entry_.heroImage"><v-icon>delete</v-icon>削除</v-btn>
+              <v-btn :disabled="!entry_ || !entry_.heroImage" :loading="currentAction == 'coverDeletion'" @click="dialog3 = true"><v-icon>delete</v-icon>削除</v-btn>
               <div style="width: 16px"></div>
               <v-btn :disabled="uploading" @click="selectHeroImage"><v-icon>add_photo_alternate</v-icon>選択</v-btn>
               <div style="width: 16px"></div>
@@ -63,6 +63,18 @@
           </v-card>
         </v-dialog>
 
+        <v-dialog v-model="dialog3" max-width="400px">
+          <v-card>
+            <v-card-title>確認</v-card-title>
+            <v-card-text>カバー画像を削除しますか？</v-card-text>
+            <v-card-actions>
+              <v-spacer/>
+              <v-btn text @click="dialog3 = false">キャンセル</v-btn>
+              <v-btn text @click="deleteCover">OK</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <v-dialog v-model="uploadingImage" persistent width="300px">
           <v-card>
             <v-card-title>画像アップロード中</v-card-title>
@@ -94,7 +106,8 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Article, Category, ContentType, Status } from '~/plugins/types'
-import { deleteEntry, getPreviewToken, publishEntry, unpublishEntry, updateSingleArticle, uploadAsset } from '~/utils/api'
+import { configStore } from '~/store'
+import { deleteAsset, deleteEntry, getPreviewToken, publishEntry, unpublishEntry, updateSingleArticle, uploadAsset } from '~/utils/api'
 
 let mde: any
 let timer: NodeJS.Timeout | undefined
@@ -111,6 +124,7 @@ export default Vue.extend({
       snackbarText: "",
       dialog: false,
       dialog2: false,
+      dialog3: false,
       entry_: undefined as Article | undefined,
       previewToken: undefined as string | undefined
     }
@@ -172,7 +186,7 @@ export default Vue.extend({
                   const cursor = editor.codemirror.getCursor()
                   editor.codemirror.getDoc().replaceRange(`\n\n![image](${result.url})`, cursor)
                 }
-              } catch (e) {
+              } catch (e: any) {
                 this.showSnackbar(`エラーが発生しました。${e.message}`)
               }
               this.uploadingImage = false
@@ -202,12 +216,13 @@ export default Vue.extend({
       this.$router.go(-1)
     },
     async save() {
+      clearTimeout(timer!)
+      timer = undefined
+    
       try {
-        clearTimeout(timer!)
-        timer = undefined
         this.currentAction = "save"
         await updateSingleArticle(this.entry_!.sys.id, this.entry_!)
-      } catch (e) {
+      } catch (e: any) {
         this.showSnackbar(e.message)
       }
       this.currentAction = undefined
@@ -225,7 +240,7 @@ export default Vue.extend({
           this.entry_!.heroImage = result
           this.save()
           this.showSnackbar("アップロードしました")
-        } catch (e) {
+        } catch (e: any) {
           this.showSnackbar(e.message)
         }
         this.uploading = false
@@ -265,7 +280,7 @@ export default Vue.extend({
         
         this.entry_ = newEntry
         this.showSnackbar(publish ? "公開しました" : "非公開にしました")
-      } catch (e) {
+      } catch (e: any) {
         this.showSnackbar(e.response.data.message)
       }
       this.currentAction = undefined
@@ -276,9 +291,23 @@ export default Vue.extend({
       try {
         if (this.entry_?.status != Status.draft) await unpublishEntry(this.entry_!.sys.id)
         await deleteEntry(this.entry_!.sys.id)
+        configStore.setSelectedPosts(configStore.selectedPosts.filter(e => e.sys.id != this.entry_!.sys.id))
         this.$router.go(-1)
-      } catch (e) {
+      } catch (e: any) {
         this.showSnackbar(e.message)
+      }
+      this.currentAction = undefined
+    },
+    async deleteCover() {
+      this.currentAction = "coverDeletion"
+      this.dialog3 = false
+      try {
+        await deleteAsset(this.entry_!.heroImage!.id)
+        this.entry_!.heroImage = undefined
+        this.save()
+        this.showSnackbar("削除しました")
+      } catch (e: any) {
+        this.showSnackbar("エラーが発生しました。" + e.message)
       }
       this.currentAction = undefined
     },
