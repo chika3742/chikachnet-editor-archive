@@ -91,7 +91,7 @@ export default {
   },
 
   env: {
-    apiBaseUrl: process.env.NODE_ENV == "production" ? "https://asia-northeast1-mydatauploader.cloudfunctions.net/admin" : "http://localhost:3001/mydatauploader/asia-northeast1/admin"
+    apiBaseUrl: process.env.NODE_ENV == "production" ? "https://asia-northeast1-chikach-net.cloudfunctions.net/admin" : "http://localhost:5001/chikach-net/asia-northeast1/admin"
     // apiBaseUrl: "https://asia-northeast1-mydatauploader.cloudfunctions.net/admin"
   },
 

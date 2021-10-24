@@ -2,13 +2,13 @@ import * as app from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBP2qHBlXgsml8jU6s9IgPI3Awx9uJ_Qh4",
-  authDomain: "mydatauploader.firebaseapp.com",
-  projectId: "mydatauploader",
-  storageBucket: "mydatauploader.appspot.com",
-  messagingSenderId: "218237880785",
-  appId: "1:218237880785:web:3bdec8deeba92d63aaf8f0",
-  measurementId: "G-9GRHHH0SSV"
+  apiKey: "AIzaSyANZOTsYyoYqQ64oP0L84W5Zh3E8FgewP0",
+  authDomain: "chikach-net.firebaseapp.com",
+  projectId: "chikach-net",
+  storageBucket: "chikach-net.appspot.com",
+  messagingSenderId: "746759118595",
+  appId: "1:746759118595:web:1d75851c0fafeccd9ed336",
+  measurementId: "G-6B9710G5XC"
 }
 
 let firebaseApp: app.FirebaseApp
