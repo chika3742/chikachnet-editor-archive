@@ -155,6 +155,14 @@ export async function deleteComment(id: string): Promise<void> {
   })
 }
 
+export async function addAdminNotificationToken(token: string) {
+  await req<void>("POST", "notification-token", {
+    data: {
+      token
+    }
+  })
+}
+
 async function req<T>(method: string, apiName: string, config: AxiosRequestConfig<any> = {}): Promise<AxiosResponse<ApiResponse<T>> | undefined> {
   let result: AxiosResponse<ApiResponse<T>> | undefined
   try {
