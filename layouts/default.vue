@@ -111,6 +111,8 @@ export default Vue.extend({
     registerNotification() {
       getToken(getMessaging(), { vapidKey: "BII3AKi9M1izFih74-PlokYFdK1g1e6i1o8D1z0SP8CoTw0E4d9j3_ahBnwSnXKAx9s7BcQfo8iFoElOoTh6sWI" }).then(token => {
         addAdminNotificationToken(token)
+      }).catch(error => {
+        console.error(error)
       })
     }
   }
