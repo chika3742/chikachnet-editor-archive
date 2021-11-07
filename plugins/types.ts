@@ -20,13 +20,21 @@ export interface Article {
   postDate: string
   category: string
   categoryId: string
-  status: Status,
+  description: string
+  status: Status
   heroImage: AssetData | undefined,
   sys: EntityMetaSysProps
 }
 
 export interface FixedPage {
   title: string
+  slug: string
+  body: string
+  status: Status
+  description: string
+  heroImage: AssetData | undefined,
+  sys: EntityMetaSysProps
+  postDate: string
 }
 
 export interface Category {

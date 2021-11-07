@@ -17,10 +17,10 @@ export async function getEntries(contentType: ContentType, skip: number): Promis
   return result!.data.data
 }
 
-export async function getSingleArticle(id: string): Promise<Article> {
-  const result = await req<Article>("GET", "entry/single", {
+export async function getSingleEntry<T>(id: string, contentType: ContentType): Promise<T> {
+  const result = await req<T>("GET", "entry/single", {
     params: {
-      content_type: ContentType.blogPost,
+      content_type: contentType,
       id
     }
   })
@@ -62,15 +62,15 @@ export async function deleteEntry(id: string) {
   })
 }
 
-export async function updateSingleArticle(id: string, data: Article): Promise<ApiResponse<never>> {
-  const result = await req<Article>("POST", "entry/single", {
+export async function updateSingleEntry<T>(id: string, data: Article | FixedPage, contentType: ContentType): Promise<ApiResponse<T>> {
+  const result = await req<T>("POST", "entry/single", {
     data,
     params: {
-      content_type: ContentType.blogPost,
+      content_type: contentType,
       id
     }
   })
-  return result!.data as ApiResponse<never>
+  return result!.data as ApiResponse<T>
 }
 
 export async function getCategories(): Promise<Category[]> {

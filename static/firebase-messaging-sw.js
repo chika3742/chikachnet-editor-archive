@@ -17,8 +17,7 @@ try {
   const messaging = firebase.messaging()
 
   messaging.onBackgroundMessage(function(payload) {
-    console.log('[firebase-messaging-sw.js] Received background message ', payload)
-    self.registration.showNotification(payload.notification.title, payload.notification)
+    self.registration.showNotification(payload.data.title, payload.data)
   })
 } catch (e) {
   console.error(e)

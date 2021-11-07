@@ -1,18 +1,18 @@
 <template>
-  <ArticleEditor :entry="article" contentType="blogPost" />
+  <ArticleEditor :entry="page" contentType="fixedPage" />
 </template>
 
 <script lang="ts">
 import { AxiosError } from 'axios'
 import Vue from 'vue'
-import { Article, ContentType } from '~/plugins/types'
+import { ContentType, FixedPage } from '~/plugins/types'
 import { getSingleEntry } from '~/utils/api'
 
 export default Vue.extend({
   layout: "empty",
   data() {
     return {
-      article: undefined as Article | undefined
+      page: undefined as FixedPage | undefined
     }
   },
   head() {
@@ -20,14 +20,12 @@ export default Vue.extend({
   },
   mounted() {
     this.fetchArticle()
-    if (this.$store.getters["vuexModuleDecorators/postData"].categories.length == 0)
-      this.$store.dispatch("postData/fetchCategories")
   },
   methods: {
     async fetchArticle() {
       try {
-        const article = await getSingleEntry<Article>(this.$route.params.articleId, ContentType.blogPost)
-        this.article = article
+        const page = await getSingleEntry<FixedPage>(this.$route.params.pageId, ContentType.fixedPage)
+        this.page = page
       }
       catch (e) {
         this.$nuxt.error({ message: (e as AxiosError<any>).response!.data.message })

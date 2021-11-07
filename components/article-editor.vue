@@ -35,7 +35,7 @@
               <span v-if="uploading">{{ uploadProgress }}</span>
             </v-row>
 
-            <v-text-field label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
+            <v-text-field v-if="entry_" v-model="entry_.description" label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
           </v-col>
         </v-slide-y-transition>
 
@@ -107,7 +107,7 @@
 import Vue from 'vue'
 import { Article, Category, ContentType, Status } from '~/plugins/types'
 import { configStore } from '~/store'
-import { deleteAsset, deleteEntry, getPreviewToken, publishEntry, unpublishEntry, updateSingleArticle, uploadAsset } from '~/utils/api'
+import { deleteAsset, deleteEntry, getPreviewToken, publishEntry, unpublishEntry, updateSingleEntry, uploadAsset } from '~/utils/api'
 
 let mde: any
 let timer: NodeJS.Timeout | undefined
@@ -166,7 +166,7 @@ export default Vue.extend({
         "unordered-list",
         "ordered-list",
         "link",
-        {
+        ...this.contentType == 'blogPost' ? [{
           name: "image",
           title: "Insert image",
           className: "fa fa-image",
@@ -193,7 +193,7 @@ export default Vue.extend({
             })
             el.click()
           }
-        },
+        }] : [],
         "|",
         "preview",
         "side-by-side",
@@ -221,7 +221,7 @@ export default Vue.extend({
     
       try {
         this.currentAction = "save"
-        await updateSingleArticle(this.entry_!.sys.id, this.entry_!)
+        await updateSingleEntry(this.entry_!.sys.id, this.entry_!, this.contentType)
       } catch (e: any) {
         this.showSnackbar(e.message)
       }
@@ -248,22 +248,24 @@ export default Vue.extend({
       el.click()
     },
     openPreview() {
-      if (!this.entry_?.categoryId || !this.entry_.slug) {
+      if ((this.contentType != 'fixedPage' && !this.entry_?.categoryId) || !this.entry_?.slug) {
         this.showSnackbar("カテゴリーとスラッグを設定してください")
-      } else if (this.$store.getters['vuexModuleDecorators/postData'].categories.length == 0 || !this.previewToken) {
+      } else if ((this.contentType != 'fixedPage' && this.$store.getters['vuexModuleDecorators/postData'].categories.length == 0) || !this.previewToken) {
         this.showSnackbar('読み込みが未完了です')
       } else {
-        const categories = this.$store.getters['vuexModuleDecorators/postData'].categories as Category[]
-        const categorySlug = categories.find(e => e.id == this.entry_?.categoryId)!.slug
         let url = ""
         if (this.contentType == ContentType.blogPost) {
+          const categories = this.$store.getters['vuexModuleDecorators/postData'].categories as Category[]
+          const categorySlug = categories.find(e => e.id == this.entry_?.categoryId)!.slug
           url = `https://www.chikach.net/category/${categorySlug}/${this.entry_?.slug}?preview=true&token=${this.previewToken}`
+        } else if (this.contentType == ContentType.fixedPage) {
+          url = `https://www.chikach.net/${this.entry_?.slug}?preview=true&token=${this.previewToken}`
         }
         window.open(url, "preview")
       }
     },
     showPublishDialog() {
-      if (!this.entry_?.title || !this.entry_.slug || !this.entry_.categoryId) {
+      if (!this.entry_?.title || !this.entry_.slug || (this.contentType == 'blogPost' && !this.entry_.categoryId) || (this.contentType == 'fixedPage' && !this.entry_.description)) {
         this.showSnackbar("必須フィールド(タイトル、スラッグ、カテゴリー)を入力してください")
         return
       }

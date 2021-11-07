@@ -40,9 +40,9 @@
         <v-slide-y-reverse-transition v-if="!loading">
           <Nuxt />
         </v-slide-y-reverse-transition>
-        <v-row v-else align="center" class="ma-0">
+        <v-row v-else align="center" class="ma-4">
           <v-progress-circular indeterminate />
-          <span class="ml-4">ログイン状態を取得しています...</span>
+          <span class="ml-4">ログイン中...</span>
         </v-row>
       </v-container>
     </v-main>
@@ -78,7 +78,7 @@ export default Vue.extend({
         {
           icon: 'category',
           title: 'カテゴリー',
-          to: '/categories'
+          to: '/category'
         },
         {
           icon: 'photo',
@@ -101,8 +101,6 @@ export default Vue.extend({
   },
   mounted() {
     this.loading = false
-
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
   },
   methods: {
     signOut() {
