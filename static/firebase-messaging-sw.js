@@ -17,7 +17,7 @@ try {
   const messaging = firebase.messaging()
 
   messaging.onBackgroundMessage(function(payload) {
-    self.registration.showNotification()
+    // self.registration.showNotification()
   })
 } catch (e) {
   console.error(e)
