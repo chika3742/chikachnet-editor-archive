@@ -2,24 +2,24 @@
   <v-app dark>
     <v-app-bar app>
       <v-app-bar-nav-icon @click="back"><v-icon>arrow_back</v-icon></v-app-bar-nav-icon>
-      <v-app-bar-title>編集 - {{ entry_ ? entry_.title : '' }}</v-app-bar-title>
+      <v-app-bar-title>編集 - {{ entry_.title }}</v-app-bar-title>
       <v-spacer/>
-      <v-app-bar-nav-icon :disabled="!entry_" :loading="currentAction == 'deletion'" @click="dialog = true"><v-icon>mdi-delete</v-icon></v-app-bar-nav-icon>
-      <v-app-bar-nav-icon :disabled="!entry_" :loading="currentAction == 'preview'" @click="openPreview"><v-icon>mdi-eye</v-icon></v-app-bar-nav-icon>
-      <v-app-bar-nav-icon :disabled="!entry_" :loading="currentAction == 'save'" @click="save"><v-icon>mdi-floppy</v-icon></v-app-bar-nav-icon>
-      <v-btn :loading="currentAction == 'publish'" color="#008700" @click="showPublishDialog">{{ pubText }}</v-btn>
+      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction == 'deletion'" @click="dialog = true"><v-icon>mdi-delete</v-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction == 'preview'" @click="openPreview"><v-icon>mdi-eye</v-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction == 'save'" @click="save"><v-icon>mdi-floppy</v-icon></v-app-bar-nav-icon>
+      <v-btn :disabled="loading" :loading="currentAction == 'publish'" color="#008700" @click="showPublishDialog">{{ pubText }}</v-btn>
       <!-- <v-btn icon :loading="deleting" :disabled="!entry" v-bind="attrs" v-on="on"><v-icon>mdi-delete</v-icon></v-btn> -->
     </v-app-bar>
     <v-main>
       <v-container v-shortkey="['meta', 's']" @shortkey="save">
-        <div v-if="!entry" class="center"><v-progress-circular indeterminate size="70" width="5" /></div>
+        <div v-if="loading" class="center"><v-progress-circular indeterminate size="70" width="5" /></div>
         <v-slide-y-transition>
-          <v-col v-show="entry">
-            <v-text-field v-if="entry_" v-model="entry_.title" label="タイトル" outlined @keydown="autosave" />
+          <v-col v-show="!loading">
+            <v-text-field v-model="entry_.title" label="タイトル" outlined @keydown="autosave" />
             <v-row class="mx-0">
-              <v-text-field v-if="entry_" v-model="entry_.slug" label="URLスラッグ" outlined style="max-width: 300px" @keydown="autosave" />
+              <v-text-field v-model="entry_.slug" label="URLスラッグ" outlined style="max-width: 300px" @keydown="autosave" />
               <v-spacer />
-              <v-select v-if="contentType == 'blogPost' && entry_" v-model="entry_.categoryId" :items="$store.getters['vuexModuleDecorators/postData'].categories" label="カテゴリー" item-text="name" item-value="id" outlined @change="autosave" />
+              <v-select v-if="contentType == 'blogPost'" v-model="entry_.categoryId" :items="$store.getters['vuexModuleDecorators/postData'].categories" label="カテゴリー" item-text="name" item-value="id" outlined @change="autosave" />
             </v-row>
             <textarea />
 
@@ -35,7 +35,7 @@
               <span v-if="uploading">{{ uploadProgress }}</span>
             </v-row>
 
-            <v-text-field v-if="entry_" v-model="entry_.description" label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
+            <v-text-field v-model="entry_.description" label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
           </v-col>
         </v-slide-y-transition>
 
@@ -117,6 +117,7 @@ export default Vue.extend({
   data() {
     return {
       currentAction: undefined as string | undefined,
+      loading: true,
       uploading: false,
       uploadingImage: false,
       uploadProgress: "",
@@ -125,7 +126,11 @@ export default Vue.extend({
       dialog: false,
       dialog2: false,
       dialog3: false,
-      entry_: undefined as Article | undefined,
+      entry_: {
+        title: "",
+        body: "",
+        description: "",
+      } as Article | undefined,
       previewToken: undefined as string | undefined
     }
   },
@@ -141,8 +146,11 @@ export default Vue.extend({
     entry(value) {
       (this as any).$nextTick(() => {
         this.entry_ = this.entry
-        mde.value(value.body)
-        mde.codemirror.on('change', (this as any).autosave)
+        this.loading = false;
+        (this as any).$nextTick(() => {
+          mde.value(value.body)
+          mde.codemirror.on('change', (this as any).autosave)
+        })
       })
     }
   },
@@ -156,6 +164,22 @@ export default Vue.extend({
         "bold",
         "italic",
         "strikethrough",
+        {
+          name: "text-color",
+          title: "Text Color",
+          className: "fa fa-tint",
+          action: (editor: any) => {
+            editor.codemirror.getDoc().replaceSelection(`<span style="color: ">${editor.codemirror.getSelection()}</span>`)
+          }
+        },
+        {
+          name: "text-size",
+          title: "Text Size",
+          className: "fa fa-text-width",
+          action: (editor: any) => {
+            editor.codemirror.getDoc().replaceSelection(`<span style="font-size: em">${editor.codemirror.getSelection()}</span>`)
+          }
+        },
         "|",
         "heading-2",
         "heading-3",
@@ -165,6 +189,7 @@ export default Vue.extend({
         "quote",
         "unordered-list",
         "ordered-list",
+        "|",
         "link",
         ...this.contentType == 'blogPost' ? [{
           name: "image",
@@ -198,7 +223,11 @@ export default Vue.extend({
         "preview",
         "side-by-side",
         "fullscreen"
-      ]
+      ],
+      shortcuts: {
+        "toggleHeading2": "Cmd-2",
+        "toggleHeading3": "Cmd-3",
+      }
     })
     this.previewToken = await getPreviewToken()
   },
