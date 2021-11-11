@@ -78,6 +78,11 @@ export async function getCategories(): Promise<Category[]> {
   return result!.data.data
 }
 
+export async function getAssets(): Promise<AssetData[]> {
+  const result = await req<AssetData[]>("GET", "asset/list", {})
+  return result!.data.data
+}
+
 export async function uploadAsset(file: File, onProgress: (msg: string) => void): Promise<AssetData> {
   onProgress("読み込み中...")
   const data = await new Promise<ArrayBuffer>((resolve) => {

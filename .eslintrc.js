@@ -37,6 +37,7 @@ module.exports = {
     'require-await': 1,
     'node/handle-callback-err': 1,
     '@typescript-eslint/no-unused-vars': 1,
-    'no-use-before-define': 0
+    'no-use-before-define': 0,
+    'vue/multi-word-component-names': 0
   }
 }
