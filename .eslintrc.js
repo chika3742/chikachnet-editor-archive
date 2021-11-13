@@ -22,7 +22,7 @@ module.exports = {
     'no-unneeded-ternary': 2,
     semi: [2, 'never'],
     'no-var': 1,
-    indent: [2, 2],
+    indent: ["warn", 2, {"SwitchCase": 1}],
     'space-in-parens': [2, 'never'],
     'no-console': 0,
     'comma-spacing': 2,
@@ -38,6 +38,6 @@ module.exports = {
     'node/handle-callback-err': 1,
     '@typescript-eslint/no-unused-vars': 1,
     'no-use-before-define': 0,
-    'vue/multi-word-component-names': 0
+    'vue/multi-word-component-names': 0,
   }
 }

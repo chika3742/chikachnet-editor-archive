@@ -11,7 +11,7 @@
       <!-- <v-btn icon :loading="deleting" :disabled="!entry" v-bind="attrs" v-on="on"><v-icon>mdi-delete</v-icon></v-btn> -->
     </v-app-bar>
     <v-main>
-      <v-container v-shortkey="['meta', 's']" @shortkey="save">
+      <v-container v-shortkey="{ save: ['meta', 's'], preview: ['meta', 'p'] }" @shortkey="onShortcut">
         <div v-if="loading" class="center"><v-progress-circular indeterminate size="70" width="5" /></div>
         <v-slide-y-transition>
           <v-col v-show="!loading">
@@ -97,6 +97,20 @@
           </v-card>
         </v-dialog>
 
+        <v-dialog v-model="embedYouTubeDialog.show" persistent width="400px">
+          <v-card>
+            <v-card-title>埋め込みURL</v-card-title>
+            <v-card-text>
+              <v-text-field v-model="embedYouTubeDialog.url" label="URL" outlined />
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer />
+              <v-btn text @click="embedYouTubeDialog.show = false">キャンセル</v-btn>
+              <v-btn text @click="insertEmbedYouTube">OK</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <v-snackbar v-model="snackbar">{{ snackbarText }}</v-snackbar>
       </v-container>
     </v-main>
@@ -126,6 +140,11 @@ export default Vue.extend({
       dialog: false,
       dialog2: false,
       dialog3: false,
+      embedYouTubeDialog: {
+        show: false,
+        codemirror: undefined as any,
+        url: ""
+      },
       entry_: {
         title: "",
         body: "",
@@ -219,6 +238,15 @@ export default Vue.extend({
             el.click()
           }
         }] : [],
+        {
+          name: "embed",
+          title: "Embed YouTube",
+          className: "fa fa-youtube",
+          action: (editor: any) => {
+            this.embedYouTubeDialog.codemirror = editor.codemirror
+            this.embedYouTubeDialog.show = true
+          }
+        },
         "|",
         "preview",
         "side-by-side",
@@ -232,6 +260,16 @@ export default Vue.extend({
     this.previewToken = await getPreviewToken()
   },
   methods: {
+    onShortcut(e: any) {
+      switch (e.srcKey) {
+        case "save":
+          this.save()
+          break
+        case "preview":
+          this.openPreview()
+          break
+      }
+    },
     autosave() {
       clearTimeout(timer!)
       timer = undefined
@@ -299,6 +337,15 @@ export default Vue.extend({
         return
       }
       this.dialog2 = true
+    },
+    insertEmbedYouTube() {
+      this.embedYouTubeDialog.show = false
+      const videoId = new URL(this.embedYouTubeDialog.url).searchParams.get('v')
+      const cursor = this.embedYouTubeDialog.codemirror.getCursor()
+      this.embedYouTubeDialog.codemirror.getDoc().replaceRange(`/i/https://www.youtube.com/embed/${videoId}`, cursor)
+
+      this.embedYouTubeDialog.url = ""
+      this.embedYouTubeDialog.codemirror = undefined
     },
     async publish(publish: boolean) {
       if (timer) await this.save()
