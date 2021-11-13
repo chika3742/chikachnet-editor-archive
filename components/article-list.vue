@@ -83,7 +83,9 @@
         <span style="font-size: 1.1em; font-weight: bold">{{item.title}}</span>
       </template>
     </v-data-table>
-    <v-btn fixed fab style="position: fixed; bottom: 0; right: 0" class="ma-8" :loading="creating" @click="create"><v-icon>post_add</v-icon></v-btn>
+    <v-fab-transition>
+      <v-btn v-show="showFab" fixed fab style="position: fixed; bottom: 0; right: 0" class="ma-8" :loading="creating" @click="create"><v-icon>post_add</v-icon></v-btn>
+    </v-fab-transition>
     <v-snackbar v-model="snackbar">
       {{snackbarText}}
     </v-snackbar>
@@ -108,7 +110,9 @@ export default Vue.extend({
       dialog: false,
       dialog2: false,
       snackbar: false,
-      snackbarText: ""
+      snackbarText: "",
+      prevScroll: 0,
+      showFab: true
     }
   },
   computed: {
@@ -123,7 +127,19 @@ export default Vue.extend({
       }
     }
   },
+  mounted() {
+    window.addEventListener('scroll', this.onScroll)
+  },
   methods: {
+    onScroll() {
+      // 下にスクロールしたらFABを隠す
+      if (window.scrollY > this.prevScroll) {
+        this.showFab = false
+      } else {
+        this.showFab = true
+      }
+      this.prevScroll = window.scrollY
+    },
     onRowClick(item: Article) {
       this.$emit("rowClick", item)
     },

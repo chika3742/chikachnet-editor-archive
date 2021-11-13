@@ -16,7 +16,9 @@
     <v-dialog v-model="dialog.show" max-width="600">
       <v-card>
         <v-card-title>アセット編集</v-card-title>
-        <v-img v-if="dialog.asset" class="ma-4" :src="dialog.asset.url" max-width="500" max-height="500" />
+        <v-row no-gutters justify="center" class="pa-4">
+          <v-img v-if="dialog.asset" class="asset-image__dialog" :src="dialog.asset.url" max-height="500" contain/>
+        </v-row>
         <v-card-actions>
           <v-spacer />
           <v-btn color="red" text :loading="dialog.deleting" @click="dialog2 = true">削除</v-btn>
@@ -37,6 +39,10 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-btn fixed fab bottom right @click="dialog.show = true">
+      <v-icon>mdi-plus</v-icon>
+    </v-btn>
   </div>
 </template>
 
@@ -92,6 +98,11 @@ export default Vue.extend({
   .asset-image {
     cursor: pointer;
     transition: all 0.3s ease;
+
+    &__dialog {
+      box-shadow: 0 0 8px #ffffffaa;
+      border-radius: 4px;
+    }
   }
   .asset-image:hover {
     transform: scale(1.15);

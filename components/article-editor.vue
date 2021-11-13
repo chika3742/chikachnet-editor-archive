@@ -101,7 +101,7 @@
           <v-card>
             <v-card-title>埋め込みURL</v-card-title>
             <v-card-text>
-              <v-text-field v-model="embedYouTubeDialog.url" label="URL" outlined />
+              <v-text-field ref="embedField" v-model="embedYouTubeDialog.url" label="URL" outlined />
             </v-card-text>
             <v-card-actions>
               <v-spacer />
@@ -245,6 +245,11 @@ export default Vue.extend({
           action: (editor: any) => {
             this.embedYouTubeDialog.codemirror = editor.codemirror
             this.embedYouTubeDialog.show = true
+            this.$nextTick(() => {
+              this.$nextTick(() => {
+                (this.$refs.embedField as any).focus()
+              })
+            })
           }
         },
         "|",
@@ -340,9 +345,26 @@ export default Vue.extend({
     },
     insertEmbedYouTube() {
       this.embedYouTubeDialog.show = false
-      const videoId = new URL(this.embedYouTubeDialog.url).searchParams.get('v')
+      let embedUrl
+      try {
+        const url = new URL(this.embedYouTubeDialog.url)
+        if (url.hostname == "www.youtube.com" || url.hostname == "youtube.com") {
+          embedUrl = `https://www.youtube.com/embed/${url.searchParams.get("v")}`
+        } else if (url.hostname == "youtu.be") {
+          embedUrl = `https://www.youtube.com/embed/${url.pathname.substr(1)}`
+        } else if (url.hostname == "vimeo.com") {
+          embedUrl = `https://player.vimeo.com/video/${url.pathname.substr(1)}`
+        } else {
+          throw new Error("YouTube、VimeoのURLを入力してください")
+        }
+      } catch (e: any) {
+        this.showSnackbar("YouTube、VimeoのURLを入力してください")
+        this.embedYouTubeDialog.url = ""
+        this.embedYouTubeDialog.codemirror = undefined
+        return
+      }
       const cursor = this.embedYouTubeDialog.codemirror.getCursor()
-      this.embedYouTubeDialog.codemirror.getDoc().replaceRange(`/i/https://www.youtube.com/embed/${videoId}`, cursor)
+      this.embedYouTubeDialog.codemirror.getDoc().replaceRange(`/i/${embedUrl}`, cursor)
 
       this.embedYouTubeDialog.url = ""
       this.embedYouTubeDialog.codemirror = undefined
