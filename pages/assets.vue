@@ -8,7 +8,7 @@
       <v-col v-for="asset in assets" :key="asset.id" class="d-flex child-flex" cols="3">
         <div class="asset-image" @click="showImageDialog(asset)">
           <v-img v-if="asset.url && imageExtensions.some(e => asset.url.endsWith(e))" :src="asset.url" aspect-ratio="1.3" />
-          <div v-else style="word-break: break-all;">{{ asset.url ? asset.url.split('/').splice(-1)[0] : 'No URL' }}</div>
+          <div v-else style="word-break: break-all; background: #555">File: {{ asset.url ? asset.url.split('/').splice(-1)[0] : 'No URL' }}</div>
         </div>
       </v-col>
     </v-row>
@@ -17,7 +17,8 @@
       <v-card>
         <v-card-title>アセット編集</v-card-title>
         <v-row no-gutters justify="center" class="pa-4">
-          <v-img v-if="dialog.asset" class="asset-image__dialog" :src="dialog.asset.url" max-height="500" contain/>
+          <v-img v-if="dialog.asset && imageExtensions.some(e => dialog.asset.url.endsWith(e))" class="asset-image__dialog" :src="dialog.asset.url" max-height="500" contain/>
+          <span v-else-if="dialog.asset">{{ dialog.asset.url.split('/').splice(-1)[0] }}</span>
         </v-row>
         <v-card-actions>
           <v-spacer />
@@ -105,7 +106,7 @@ export default Vue.extend({
     }
   }
   .asset-image:hover {
-    transform: scale(1.15);
+    transform: scale(1.1);
     filter: blur(1px) brightness(1.2);
   }
 </style>

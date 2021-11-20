@@ -88,7 +88,7 @@ export default Vue.extend({
       this.$router.push(`/pages/editor/${item.sys.id}`)
     },
     async create() {
-      const result = await createEntry(ContentType.blogPost)
+      const result = await createEntry(ContentType.fixedPage)
       this.$router.push(`/pages/editor/${result.id}`)
     },
     deleteSelected() {
