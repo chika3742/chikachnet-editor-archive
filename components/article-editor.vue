@@ -329,9 +329,9 @@ export default Vue.extend({
         if (this.contentType == ContentType.blogPost) {
           const categories = this.$store.getters['vuexModuleDecorators/postData'].categories as Category[]
           const categorySlug = categories.find(e => e.id == this.entry_?.categoryId)!.slug
-          url = `https://www.chikach.net/category/${categorySlug}/${this.entry_?.slug}?preview=true&token=${this.previewToken}`
+          url = `https://www.chikach.net/category/${categorySlug}/${this.entry_?.slug}/?preview=true&token=${this.previewToken}`
         } else if (this.contentType == ContentType.fixedPage) {
-          url = `https://www.chikach.net/${this.entry_?.slug}?preview=true&token=${this.previewToken}`
+          url = `https://www.chikach.net/${this.entry_?.slug}/?preview=true&token=${this.previewToken}`
         }
         window.open(url, "preview")
       }
