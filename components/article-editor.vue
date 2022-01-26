@@ -1,3 +1,4 @@
+<!--suppress CssInvalidPropertyValue -->
 <template>
   <v-app dark>
     <v-app-bar app>
@@ -119,9 +120,17 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { Article, Category, ContentType, Status } from '~/plugins/types'
-import { configStore } from '~/store'
-import { deleteAsset, deleteEntry, getPreviewToken, publishEntry, unpublishEntry, updateSingleEntry, uploadAsset } from '~/utils/api'
+import {Article, Category, ContentType, Status} from '~/plugins/types'
+import {configStore} from '~/store'
+import {
+  deleteAsset,
+  deleteEntry,
+  getPreviewToken,
+  publishEntry,
+  unpublishEntry,
+  updateSingleEntry,
+  uploadAsset
+} from '~/utils/api'
 
 let mde: any
 let timer: NodeJS.Timeout | undefined
@@ -290,10 +299,11 @@ export default Vue.extend({
     async save() {
       clearTimeout(timer!)
       timer = undefined
-    
+
       try {
         this.currentAction = "save"
         await updateSingleEntry(this.entry_!.sys.id, this.entry_!, this.contentType)
+        this.entry_!.status = Status.updated
       } catch (e: any) {
         this.showSnackbar(e.message)
       }
@@ -377,7 +387,7 @@ export default Vue.extend({
         let newEntry: Article
         if (publish) newEntry = await publishEntry(this.entry_?.sys.id!)
         else newEntry = await unpublishEntry(this.entry_?.sys.id!)
-        
+
         this.entry_ = newEntry
         this.showSnackbar(publish ? "公開しました" : "非公開にしました")
       } catch (e: any) {
