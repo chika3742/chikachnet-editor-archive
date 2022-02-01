@@ -20,14 +20,14 @@
             <v-row class="mx-0">
               <v-text-field v-model="entry_.slug" label="URLスラッグ" outlined style="max-width: 300px" @keydown="autosave" />
               <v-spacer />
-              <v-select v-if="contentType == 'blogPost'" v-model="entry_.categoryId" :items="$store.getters['vuexModuleDecorators/postData'].categories" label="カテゴリー" item-text="name" item-value="id" outlined @change="autosave" />
+              <v-select v-if="contentType === 'blogPost'" v-model="entry_.categoryId" :items="$store.getters['vuexModuleDecorators/postData'].categories" label="カテゴリー" item-text="name" item-value="id" outlined @change="autosave" />
             </v-row>
             <textarea />
 
             <h3>カバー画像</h3>
             <v-img :src="entry_ && entry_.heroImage ? entry_.heroImage.url : undefined" class="my-4" style="width: 500px" />
             <v-row class="ma-0 mb-8" align="center">
-              <v-btn :disabled="!entry_ || !entry_.heroImage" :loading="currentAction == 'coverDeletion'" @click="dialog3 = true"><v-icon>delete</v-icon>削除</v-btn>
+              <v-btn :disabled="!entry_ || !entry_.heroImage" :loading="currentAction === 'coverDeletion'" @click="dialog3 = true"><v-icon>delete</v-icon>削除</v-btn>
               <div style="width: 16px"></div>
               <v-btn :disabled="uploading" @click="selectHeroImage"><v-icon>add_photo_alternate</v-icon>選択</v-btn>
               <div style="width: 16px"></div>
@@ -37,6 +37,8 @@
             </v-row>
 
             <v-text-field v-model="entry_.description" label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
+
+            <v-switch v-model="entry_.enableAd" label="広告を表示する" />
           </v-col>
         </v-slide-y-transition>
 
@@ -316,11 +318,10 @@ export default Vue.extend({
       el.addEventListener('change', async () => {
         this.uploading = true
         try {
-          const result = await uploadAsset(el.files![0], (msg) => {
+          this.entry_!.heroImage = await uploadAsset(el.files![0], (msg) => {
             this.uploadProgress = msg
           })
-          this.entry_!.heroImage = result
-          this.save()
+          await this.save()
           this.showSnackbar("アップロードしました")
         } catch (e: any) {
           this.showSnackbar(e.message)

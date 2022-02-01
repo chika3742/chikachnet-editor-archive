@@ -22,8 +22,10 @@ export interface Article {
   categoryId: string
   description: string
   status: Status
-  heroImage: AssetData | undefined,
+  heroImage: AssetData | undefined
   sys: EntityMetaSysProps
+  enableAd: boolean | undefined
+  legacy: boolean | undefined
 }
 
 export interface FixedPage {
