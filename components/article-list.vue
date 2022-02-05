@@ -72,7 +72,7 @@
               </template>
               <span>公開</span>
             </v-tooltip>
-        
+
           </v-container>
         </v-row>
       </template>
@@ -96,7 +96,7 @@
 import Vue from 'vue'
 import { Article, Status } from '~/plugins/types'
 import { postDataStore } from '~/store'
-import { publishEntry } from '~/utils/api'
+import {publishEntry, publishUpdatedEntries} from '~/utils/api'
 export default Vue.extend({
   props: ['headers', 'posts', 'noDataText', 'loading', 'selectedItems', 'serverTotal'],
   data() {
@@ -163,21 +163,13 @@ export default Vue.extend({
       this.dialog2 = false
       // @ts-ignore
       this.$parent.loading = true
-      const promises = [
-        ...this.$store.getters['vuexModuleDecorators/postData'].posts.filter((el: Article) => el.status == Status.updated).map((el: Article) => publishEntry(el.sys.id))
-      ]
-      Promise.all(promises).then(() => {
-        return Promise.all([postDataStore.fetchPosts([this, this.options.page])])
-      }).then(() => {
+
+      publishUpdatedEntries().then(() => {
         this.snackbar = true
         this.snackbarText = "公開しました"
       }).catch((e) => {
         this.snackbar = true
-        if (e.response.data.error.name == "required") {
-          this.snackbarText = "必須フィールドが未入力です。" + e.response.data.error.details
-        } else {
-          this.snackbarText = "エラーが発生しました"
-        }
+        this.snackbarText = `エラーが発生しました。${e.response?.body}`
       }).finally(() => {
         // @ts-ignore
         this.$parent.loading = false

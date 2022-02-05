@@ -5,10 +5,10 @@
       <v-app-bar-nav-icon @click="back"><v-icon>arrow_back</v-icon></v-app-bar-nav-icon>
       <v-app-bar-title>編集 - {{ entry_.title }}</v-app-bar-title>
       <v-spacer/>
-      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction == 'deletion'" @click="dialog = true"><v-icon>mdi-delete</v-icon></v-app-bar-nav-icon>
-      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction == 'preview'" @click="openPreview"><v-icon>mdi-eye</v-icon></v-app-bar-nav-icon>
-      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction == 'save'" @click="save"><v-icon>mdi-floppy</v-icon></v-app-bar-nav-icon>
-      <v-btn :disabled="loading" :loading="currentAction == 'publish'" color="#008700" @click="showPublishDialog">{{ pubText }}</v-btn>
+      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction === 'deletion'" @click="dialog = true"><v-icon>mdi-delete</v-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction === 'preview'" @click="openPreview"><v-icon>mdi-eye</v-icon></v-app-bar-nav-icon>
+      <v-app-bar-nav-icon :disabled="loading" :loading="currentAction === 'save'" @click="save"><v-icon>mdi-floppy</v-icon></v-app-bar-nav-icon>
+      <v-btn :disabled="loading" :loading="currentAction === 'publish'" color="#008700" @click="showPublishDialog">{{ pubText }}</v-btn>
       <!-- <v-btn icon :loading="deleting" :disabled="!entry" v-bind="attrs" v-on="on"><v-icon>mdi-delete</v-icon></v-btn> -->
     </v-app-bar>
     <v-main>
@@ -38,7 +38,7 @@
 
             <v-text-field v-model="entry_.description" label="ディスクリプション" outlined counter="20000" auto-grow @keydown="autosave" />
 
-            <v-switch v-model="entry_.enableAd" label="広告を表示する" />
+            <v-switch v-if="contentType === 'fixedPage'" v-model="entry_.enableAd" label="広告を表示する" />
           </v-col>
         </v-slide-y-transition>
 
@@ -305,7 +305,9 @@ export default Vue.extend({
       try {
         this.currentAction = "save"
         await updateSingleEntry(this.entry_!.sys.id, this.entry_!, this.contentType)
-        this.entry_!.status = Status.updated
+        if (this.entry_?.status == Status.published) {
+          this.entry_!.status = Status.updated
+        }
       } catch (e: any) {
         this.showSnackbar(e.message)
       }

@@ -45,6 +45,10 @@ export async function publishEntry(id: string): Promise<Article> {
   return result?.data.data!
 }
 
+export async function publishUpdatedEntries(): Promise<void> {
+  await req<void>("POST", "entry/publish/updated")
+}
+
 export async function unpublishEntry(id: string): Promise<Article> {
   const result = await req<Article>("POST", "entry/unpublish", {
     params: {

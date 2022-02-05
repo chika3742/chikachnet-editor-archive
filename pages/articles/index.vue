@@ -85,7 +85,7 @@ export default Vue.extend({
     //     this.error = true
     //     this.errorMessage = error
     //   }
-      
+
     //   this.loading = false
     // },
     openEditor(item: Article) {
@@ -97,7 +97,7 @@ export default Vue.extend({
     },
     deleteSelected() {
       console.log(configStore.selectedPosts)
-      
+
     },
     async updatePage(pageInfo: any) {
       this.loading = true
