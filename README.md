@@ -1,5 +1,7 @@
 # cneditor2
 
+chikachnet-editor2 レポジトリのコピー
+
 ## Build Setup
 
 ```bash
